@@ -1,0 +1,5 @@
+# Solo para las pruebas: scipy verifica los resultados, NUNCA los produce
+-r requirements.txt
+pytest>=8.0
+scipy>=1.11
+numpy>=1.26
