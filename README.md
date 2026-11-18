@@ -81,7 +81,7 @@ examples/               Problemas de ejemplo en JSON
 
 | Sprint | Fecha | Entrega |
 |--------|-------|---------|
-| Sprint 1 | 18 nov 2026 | Propuesta (ver [docs/SPRINT1_PROPUESTA.md](docs/SPRINT1_PROPUESTA.md)) |
+| Sprint 1 | 18 nov 2026 | Propuesta: [informe PDF](docs/Sprint1_Propuesta.pdf) · [resumen](docs/SPRINT1_PROPUESTA.md) |
 | Sprint 2 | 27 nov 2026 | Avance |
 | Sprint 3 | 4 dic 2026 | Entrega final y sustentación |
 
