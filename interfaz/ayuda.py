@@ -78,6 +78,24 @@ PASO_A_PASO_REVISADO = """
 - **Costos reducidos:** solo de las no básicas; la fila resaltada es la que entra.
 """
 
+ANIMACION = """
+**Qué muestra:** «El viaje del Simplex», la explicación animada y narrada de **este mismo problema**,
+calculada con el motor propio. Tiene 8 capítulos:
+
+1. El problema y su región factible.
+2. La forma estándar (holguras, excesos y artificiales).
+3. El recorrido de la Gran M en el tablero: quién entra, la razón mínima, quién sale y el pivote.
+4. El mismo recorrido con el simplex revisado (B⁻¹, multiplicadores y costos reducidos) y la comparación.
+5. Cómo la Gran M saca a las variables artificiales.
+6. La sensibilidad: qué pasa al mover un lado derecho.
+7. Los casos especiales (infactible, no acotado, óptimos múltiples, degenerado).
+8. El resultado.
+
+**Controles:** clic en la portada o **Av Pág / →** para avanzar, **Re Pág / ←** para retroceder, **1–8** para
+ir a un capítulo, **H** para verla de corrido, **F** pantalla completa y **M** silencio. En el panel de la
+derecha se cambian la voz, el volumen y el ritmo.
+"""
+
 GRAFICO = """
 **Qué muestra (solo con 2 variables):**
 

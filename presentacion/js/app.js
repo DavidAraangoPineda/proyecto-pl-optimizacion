@@ -481,14 +481,19 @@
     if (s.degeneradas.length) await N.narrar(`Y ${EL(s.degeneradas, ', ')} es básica pero vale cero: la solución es <b>degenerada</b>.`);
   }
 
-  /** Tabla de un bloque del simplex revisado (B⁻¹, multiplicadores o costos reducidos). */
-  function bloqueHTML(b, resaltarFila, claseFila) {
-    let h = `<p class="pz-titulo" style="margin-top:10px">${E(b.titulo)}</p><div class="tab-envoltura tab-chica"><table class="tab"><thead><tr>`;
-    b.header.forEach((c) => (h += `<th>${E(c)}</th>`));
+  /**
+   * Tabla de un bloque del simplex revisado (B⁻¹, multiplicadores o costos reducidos).
+   * sinAlfa oculta las columnas α y razón, que solo tienen sentido después de elegir la variable que entra.
+   */
+  function bloqueHTML(b, resaltarFila, claseFila, sinAlfa = false) {
+    const n = sinAlfa && b.header.length > 2 && /α/.test(b.header[b.header.length - 2]) ? b.header.length - 2 : b.header.length;
+    const titulo = n < b.header.length ? 'Base actual, B⁻¹ y xB' : b.titulo;
+    let h = `<p class="pz-titulo" style="margin-top:10px">${E(titulo)}</p><div class="tab-envoltura tab-chica"><table class="tab"><thead><tr>`;
+    b.header.slice(0, n).forEach((c) => (h += `<th>${E(c)}</th>`));
     h += '</tr></thead><tbody>';
     b.rows.forEach((r, i) => {
       h += `<tr class="${i === resaltarFila ? claseFila : ''}">`;
-      r.forEach((c, k) => (h += `<td class="${k === 0 ? 'etq' : ''}">${E(c)}</td>`));
+      r.slice(0, n).forEach((c, k) => (h += `<td class="${k === 0 ? 'etq' : ''}">${E(c)}</td>`));
       h += '</tr>';
     });
     return h + '</tbody></table></div>';
@@ -532,20 +537,22 @@
       if (t === '2d') v2.estado.punto.texto = etiquetaPunto(s, p);
       if (t === '3d') v3.estado.punto.texto = etiquetaPunto(s, p);
       const cabeza = `<p class="pz-titulo">Simplex revisado · iteración ${E(p.k)}</p><p class="pz-grande">Base: ${EL(p.base)}</p>`;
-      pizarra(cabeza + bloqueHTML(bInv, -1, ''));
+      pizarra(cabeza + bloqueHTML(bInv, -1, '', true));
       if (k === 0) {
         await N.narrar('El <b>simplex revisado</b> resuelve el mismo problema sin cargar todo el tablero. Solo guarda <b>B⁻¹</b>, la inversa de la matriz de la base.');
         await N.narrar(`Al inicio la base es ${EL(p.base)}: sus columnas forman la identidad, así que B⁻¹ también es la identidad, y x<sub>B</sub> = B⁻¹·b es el lado derecho.`);
       } else if (!breve) {
         await N.narrar(`Iteración ${E(p.k)}. Con la nueva B⁻¹, x<sub>B</sub> = B⁻¹·b da el punto ${E(punto(s, p.xs))}.`, 2400);
       }
-      agregar(bloqueHTML(mult, -1, '') + bloqueHTML(costos, p.entra ? costos.meta.enter_row : -1, 'resaltada'));
+      const costosHTML = (marcar) => bloqueHTML(mult, -1, '') + bloqueHTML(costos, marcar ? costos.meta.enter_row : -1, 'resaltada');
+      agregar(costosHTML(false));
       if (!p.entra) {
         await N.narrar(R.estado === 'infeasible'
           ? 'Ningún costo reducido es positivo, pero queda una artificial positiva en la base: <b>el problema es infactible</b>, igual que con la Gran M.'
           : 'Ningún costo reducido es positivo: <b>llegamos al óptimo</b>.');
         break;
       }
+      pizarra(cabeza + bloqueHTML(bInv, -1, '', true) + costosHTML(true));   // se resalta la que entra
       if (breve) {
         await N.narrar(`Iteración ${E(p.k)}: <span class="v">entra ${E(p.entra)}</span> (cj − zj = ${E(p.dj)})${p.sale ? ` y <span class="s">sale ${E(p.sale)}</span>` : ''}.`, 2400);
       } else {

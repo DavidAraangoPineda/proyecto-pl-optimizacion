@@ -43,14 +43,37 @@ def _vertices(p):
     return sorted(pts)
 
 
-def _is_unbounded_region(p):
-    """La región (no vacía) es no acotada si existe una dirección d ≥ 0, d ≠ 0 con A·d (≤,≥,=) 0."""
+def improving_direction_2d(problem):
+    """Dirección (d1, d2) por la que la región se extiende sin fin y Z mejora; None si no existe.
+
+    Si existe, el problema es no acotado. Entre las direcciones candidatas se elige la que más mejora Z
+    por unidad de longitud (sirve para dibujar la flecha «Z crece sin límite»).
+    """
+    p = _View(problem)
+    sgn = 1 if problem.sense == "max" else -1
+    best, best_score = None, 0.0
+    for d1, d2 in _recession_directions(p):
+        gain = sgn * (problem.c[0] * d1 + problem.c[1] * d2)
+        if gain > 0:
+            score = float(gain) / (float(d1) ** 2 + float(d2) ** 2) ** 0.5
+            if score > best_score:
+                best, best_score = (d1, d2), score
+    return best
+
+
+def _recession_directions(p):
+    """Direcciones d ≥ 0, d ≠ 0 con A·d (≤, ≥, =) 0: hacia donde la región se extiende sin fin.
+
+    Basta revisar los ejes y las direcciones paralelas a cada restricción: los bordes del cono de
+    direcciones están siempre entre ellas.
+    """
     cands = [(Fraction(1), Fraction(0)), (Fraction(0), Fraction(1))]
     for a1, a2 in p.A_2d:
         for sg in (1, -1):
             d = (-a2 * sg, a1 * sg)
             if d != (0, 0):
                 cands.append(d)
+    out = []
     for d1, d2 in cands:
         if d1 < 0 or d2 < 0 or (d1 == 0 and d2 == 0):
             continue
@@ -61,9 +84,13 @@ def _is_unbounded_region(p):
                 ok = False
                 break
         if ok:
-            return True
-    return False
+            out.append((d1, d2))
+    return out
 
+
+def _is_unbounded_region(p):
+    """La región (no vacía) es no acotada si existe alguna dirección de recesión."""
+    return bool(_recession_directions(p))
 
 
 class _View:

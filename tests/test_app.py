@@ -19,5 +19,5 @@ def test_resolver_cada_ejemplo_sin_errores(ejemplo, metodo):
     at.sidebar.radio[0].set_value(metodo).run()
     next(b for b in at.button if "Resolver" in b.label).click().run()
     assert not at.exception, at.exception
-    assert len(at.tabs) == 6
+    assert len(at.tabs) == 7
     assert at.success or at.error or at.warning      # siempre informa el estado del problema

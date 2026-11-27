@@ -10,7 +10,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import Polygon  # noqa: E402
 
-from .geometry import feasible_vertices_2d, is_unbounded_region_2d  # noqa: E402
+from .geometry import feasible_vertices_2d, improving_direction_2d, is_unbounded_region_2d  # noqa: E402
 from .model import SIGN_LABEL  # noqa: E402
 from .numbers import fmt, lin_expr  # noqa: E402
 
@@ -149,6 +149,16 @@ def graph_2d(problem, solution=None, dark=False):
     if poly and _area(poly) > 1e-9 * X * Y and not has_equal and not info.empty:
         ax.add_patch(Polygon(poly, closed=True, facecolor=C["region"], edgecolor="none", alpha=0.55, zorder=1,
                              label="Región factible"))
+    elif info.empty:
+        # Región vacía: se sombrea tenuemente el lado que permite cada restricción, para que se vea
+        # que no hay ningún punto común a todas.
+        box = [(0.0, 0.0), (X, 0.0), (X, Y), (0.0, Y)]
+        for i, ((a1, a2), s, b) in enumerate(zip(pairs, problem.signs, problem.b)):
+            fa1, fa2, fb = float(a1), float(a2), float(b)
+            half = _clip(box, fa1, fa2, fb, 1) if s == "<=" else _clip(box, fa1, fa2, fb, -1) if s == ">=" else []
+            if half and _area(half) > 0:
+                ax.add_patch(Polygon(half, closed=True, facecolor=C["lines"][i % len(C["lines"])], edgecolor="none",
+                                     alpha=0.13, zorder=1))
     elif info.vertices:
         pts = sorted(info.vertices, key=lambda v: (v[0], v[1]))
         ax.plot([float(v[0]) for v in pts], [float(v[1]) for v in pts], color=C["region_line"], lw=5, alpha=0.6,
@@ -218,6 +228,25 @@ def graph_2d(problem, solution=None, dark=False):
         ax.annotate("", xy=(float(ox1) + sgn * L * fc1 / norm, float(ox2) + sgn * L * fc2 / norm),
                     xytext=(float(ox1), float(ox2)),
                     arrowprops=dict(arrowstyle="->", color=C["z"], lw=2), zorder=6)
+
+    # ----- problema no acotado: flecha en la dirección en que Z crece sin límite
+    if status == "unbounded" and info.vertices:
+        d = improving_direction_2d(problem)
+        if d is not None:
+            sgn = 1 if problem.sense == "max" else -1
+            # parte del centro de los vértices (un punto de la región) y llega casi al borde del dibujo
+            sx = sum(float(v[0]) for v in info.vertices) / len(info.vertices)
+            sy = sum(float(v[1]) for v in info.vertices) / len(info.vertices)
+            ux, uy = float(d[0]), float(d[1])
+            steps = [(0.92 * X - sx) / ux if ux > 0 else float("inf"), (0.92 * Y - sy) / uy if uy > 0 else float("inf")]
+            k = max(min(steps), 0.0)
+            ex, ey = sx + k * ux, sy + k * uy
+            ax.annotate("", xy=(ex, ey), xytext=(sx, sy), zorder=6,
+                        arrowprops=dict(arrowstyle="-|>", color=C["z"], lw=2.5, mutation_scale=18))
+            ax.plot([], [], color=C["z"], lw=2.5, label=f"Z {'crece' if sgn > 0 else 'decrece'} sin límite")
+            ax.annotate(f"Z {'crece' if sgn > 0 else 'decrece'} sin límite", (ex, ey), xytext=(-6, 6),
+                        textcoords="offset points", ha="right", fontsize=10, fontweight="bold", color=C["z"],
+                        bbox=dict(boxstyle="round,pad=0.25", fc=C["label_bg"], ec=C["z"], alpha=0.9), zorder=7)
 
     if info.empty:
         ax.text(0.5, 0.5, "REGIÓN FACTIBLE VACÍA", transform=ax.transAxes, ha="center", va="center", fontsize=18,

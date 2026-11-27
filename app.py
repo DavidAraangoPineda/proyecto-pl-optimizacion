@@ -7,10 +7,11 @@ import io
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 from interfaz import ayuda
 from lp.graphical import figure_png, graph_2d
-from lp.model import (EXAMPLES, SIGN_LABEL, ValidationError, constraints_text, objective_text,
+from lp.model import (EXAMPLES, SIGN_LABEL, ValidationError, constraints_text, objective_text, problem_from_json,
                       parse_problem, problem_to_json, raw_from_json)
 from lp.numbers import fmt, fmt_bound
 from lp.pdf_export import build_pdf
@@ -188,7 +189,8 @@ if res is None:
 problem, sol = res["problem"], res["sols"][method]
 st.divider()
 st.subheader("2. Resultados")
-tabs = st.tabs(["📋 Resultado", "🪜 Paso a paso", "📈 Método gráfico", "🎯 Sensibilidad", "⚖️ Comparar métodos", "📄 Exportar"])
+tabs = st.tabs(["📋 Resultado", "🪜 Paso a paso", "🎬 Animación", "📈 Método gráfico", "🎯 Sensibilidad",
+                "⚖️ Comparar métodos", "📄 Exportar"])
 
 
 def _ayuda(*textos):
@@ -307,8 +309,24 @@ with tabs[1]:
                     elif sol.status == "unbounded":
                         st.warning("Columna sin elementos positivos → problema no acotado.")
 
-# ---- Método gráfico
+# ---- Animación
+@st.cache_data(show_spinner=False, max_entries=20)
+def _animacion(problema_json):
+    """HTML de la presentación animada para un problema (en caché: generarla tarda alrededor de un segundo)."""
+    return presentation_html(problem_from_json(problema_json))
+
+
 with tabs[2]:
+    _ayuda(ayuda.ANIMACION)
+    with st.spinner("Preparando la animación con el motor propio..."):
+        html_animacion = _animacion(problem_to_json(problem))
+    components.html(html_animacion, height=760, scrolling=False)
+    st.caption("Clic en la portada o **Av Pág** para empezar · **H** todo de corrido · **F** pantalla completa. "
+               "La voz recomendada es la de Microsoft Edge (Salomé); en otros navegadores se usa la voz disponible.")
+
+
+# ---- Método gráfico
+with tabs[3]:
     _ayuda(ayuda.GRAFICO)
     info = graph_2d(problem, sol, dark=_tema_oscuro())
     if not info.applicable:
@@ -340,7 +358,7 @@ with tabs[2]:
             st.markdown(ayuda.LEER_GRAFICO)
 
 # ---- Sensibilidad
-with tabs[3]:
+with tabs[4]:
     _ayuda(ayuda.SENSIBILIDAD)
     if sol.status != "optimal":
         st.info("El análisis de sensibilidad solo existe cuando hay una solución óptima.")
@@ -388,7 +406,7 @@ with tabs[3]:
                    "Los rangos son válidos moviendo un solo parámetro a la vez.")
 
 # ---- Comparar métodos
-with tabs[4]:
+with tabs[5]:
     _ayuda(ayuda.COMPARAR)
     a, b = res["sols"]["bigm"], res["sols"]["revised"]
     st.markdown("Comparación de las iteraciones de **Gran M (tablero)** y **simplex revisado** (misma regla de pivoteo).")
@@ -417,7 +435,7 @@ with tabs[4]:
                 "y calcula bajo demanda los costos reducidos y la columna de la variable que entra.")
 
 # ---- Exportar
-with tabs[5]:
+with tabs[6]:
     _ayuda(ayuda.EXPORTAR)
     st.markdown("Exporta el problema, la forma estándar, **todas las iteraciones**, la solución, la sensibilidad y el gráfico en un PDF.")
     if st.button("Generar PDF"):
