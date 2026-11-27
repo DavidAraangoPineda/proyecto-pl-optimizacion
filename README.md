@@ -59,20 +59,28 @@ Las pruebas cubren los 7 problemas del enunciado con ambos métodos, 400 problem
 
 ```
 app.py                  Interfaz (Streamlit)
-lp/numbers.py           Fracciones y números a + b·M (Gran M simbólica)
+interfaz/ayuda.py       Explicación de cada parte de la aplicación (desplegables ℹ️)
+lp/numbers.py           Fracciones, números a + b·M (Gran M simbólica) y expresiones lineales
+lp/linalg.py            Álgebra lineal exacta (identidad, inversa, producto)
 lp/model.py             Problema, validación, JSON, ejemplos
 lp/standard.py          Forma estándar (holguras, excesos, artificiales)
+lp/common.py            Reglas de pivoteo compartidas por los dos métodos
 lp/bigm.py              Método de la Gran M (tablero)
 lp/revised.py           Simplex revisado (B⁻¹ explícita)
 lp/analysis.py          Interpretación, casos especiales y sensibilidad
-lp/graphical.py         Método gráfico
+lp/geometry.py          Vértices y región factible en 2D (sin dibujo)
+lp/solver.py            Punto de entrada: resolver con el método elegido
+lp/render.py            Tablas y justificaciones del paso a paso
+lp/graphical.py         Método gráfico (matplotlib)
 lp/pdf_export.py        Exportación a PDF
 lp/presentation.py      Datos y HTML de la presentación animada
 presentacion/           Presentación (HTML/CSS/JS); `python -m lp.presentation` regenera js/datos.js
 tests/                  Pruebas (scipy solo para verificar)
-docs/                   Propuesta, planeación de sprints y manual
+docs/                   Arquitectura, propuesta, planeación de sprints y manual
 examples/               Problemas de ejemplo en JSON
 ```
+
+La separación por capas y sus reglas (verificadas por las pruebas) están en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
 ## Decisiones de diseño
 

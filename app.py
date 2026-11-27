@@ -8,6 +8,7 @@ import io
 import pandas as pd
 import streamlit as st
 
+from interfaz import ayuda
 from lp.graphical import graph_2d
 from lp.model import (EXAMPLES, SIGN_LABEL, ValidationError, constraints_text, objective_text,
                       parse_problem, problem_to_json, raw_from_json)
@@ -70,6 +71,8 @@ with st.sidebar:
     st.header("⚙️ Opciones")
     method = st.radio("Método de solución", list(METHODS), format_func=lambda k: METHODS[k][0],
                       help="Ambos métodos son implementación propia del equipo.")
+    with st.expander("ℹ️ ¿Qué diferencia hay entre los métodos?"):
+        st.markdown(ayuda.METODOS)
     mode = st.radio("Modo de solución", ["Paso a paso", "Solución directa"],
                     help="Directa: solo el resultado. Paso a paso: forma estándar e iteraciones.")
     decimals = st.radio("Formato de números", ["Fracciones", "Decimales"], horizontal=True) == "Decimales"
@@ -104,6 +107,8 @@ st.title("📐 Programación Lineal")
 st.caption("Resuelve con el método de la Gran M o el simplex revisado y muestra todo el proceso.")
 
 st.subheader("1. Problema")
+with st.expander("ℹ️ Cómo escribir el problema"):
+    st.markdown(ayuda.ENTRADA)
 ss.sense = st.radio("Tipo de problema", ["Maximizar", "Minimizar"],
                     index=0 if ss.sense in ("max", "Maximizar") else 1, horizontal=True)
 
@@ -185,6 +190,13 @@ st.subheader("2. Resultados")
 tabs = st.tabs(["📋 Resultado", "🪜 Paso a paso", "📈 Método gráfico", "🎯 Sensibilidad", "⚖️ Comparar métodos", "📄 Exportar"])
 
 
+def _ayuda(*textos):
+    """Desplegable con la explicación de la pestaña: qué muestra y cómo leerla."""
+    with st.expander("ℹ️ ¿Qué muestra esta pestaña y cómo leerla?"):
+        for t in textos:
+            st.markdown(t)
+
+
 def _df(header, rows, meta=None):
     # los encabezados repetidos romperían el DataFrame; se hacen únicos
     seen, cols = {}, []
@@ -214,6 +226,7 @@ def _df(header, rows, meta=None):
 
 # ---- Resultado
 with tabs[0]:
+    _ayuda(ayuda.RESULTADO)
     st.caption(f"Método utilizado: **{METHODS[method][0]}** · {len(sol.run.steps) - 1} iteración(es)")
     if sol.status == "optimal":
         st.success("✅ Solución óptima encontrada")
@@ -242,6 +255,7 @@ with tabs[0]:
 
 # ---- Paso a paso
 with tabs[1]:
+    _ayuda(ayuda.PASO_A_PASO_COMUN, ayuda.PASO_A_PASO_BIGM if method == "bigm" else ayuda.PASO_A_PASO_REVISADO)
     if mode != "Paso a paso":
         st.info("Está en modo **Solución directa**. Cambie a **Paso a paso** en la barra lateral para ver la forma estándar y las iteraciones.")
     else:
@@ -281,6 +295,7 @@ with tabs[1]:
 
 # ---- Método gráfico
 with tabs[2]:
+    _ayuda(ayuda.GRAFICO)
     info = graph_2d(problem, sol)
     if not info.applicable:
         st.warning("⚠️ " + info.messages[0])
@@ -298,6 +313,7 @@ with tabs[2]:
 
 # ---- Sensibilidad
 with tabs[3]:
+    _ayuda(ayuda.SENSIBILIDAD)
     if sol.status != "optimal":
         st.info("El análisis de sensibilidad solo existe cuando hay una solución óptima.")
     else:
@@ -345,6 +361,7 @@ with tabs[3]:
 
 # ---- Comparar métodos
 with tabs[4]:
+    _ayuda(ayuda.COMPARAR)
     a, b = res["sols"]["bigm"], res["sols"]["revised"]
     st.markdown("Comparación de las iteraciones de **Gran M (tablero)** y **simplex revisado** (misma regla de pivoteo).")
 
@@ -373,6 +390,7 @@ with tabs[4]:
 
 # ---- Exportar
 with tabs[5]:
+    _ayuda(ayuda.EXPORTAR)
     st.markdown("Exporta el problema, la forma estándar, **todas las iteraciones**, la solución, la sensibilidad y el gráfico en un PDF.")
     if st.button("Generar PDF"):
         with st.spinner("Generando PDF..."):
