@@ -40,6 +40,10 @@ pip install -r requirements.txt
 
 ## Ejecución
 
+**En línea (sin instalar nada):** https://simplex-gran-m-udea.streamlit.app
+
+En el equipo propio:
+
 ```bash
 streamlit run app.py
 ```

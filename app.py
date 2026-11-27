@@ -99,7 +99,7 @@ with st.sidebar:
             st.error("\n\n".join(e.messages))
         except UnicodeDecodeError:
             st.error("No se pudo leer el archivo: no es texto UTF-8.")
-    st.caption("🌙 Modo oscuro: menú ⋮ (arriba a la derecha) → Settings → Theme.")
+    st.caption("🌙 Modo oscuro: menú ⋮ (arriba a la derecha) → Dark.")
     st.caption("Equipo: David Arango Pineda · Juan Ignacio Parra")
 
 # ====================================================================== entrada del problema
@@ -204,7 +204,7 @@ ROJO = "rgba(248, 81, 73, 0.28)"
 
 
 def _tema_oscuro():
-    """True si el usuario tiene activo el tema oscuro (menú ⋮ → Settings → Theme)."""
+    """True si el usuario tiene activo el tema oscuro (menú ⋮ → Dark)."""
     try:
         return st.context.theme.type == "dark"
     except AttributeError:      # versiones de Streamlit sin st.context.theme
