@@ -18,6 +18,23 @@ def fmt_bound(x, decimals=False):
     return "∞" if x is None else fmt(x, decimals)
 
 
+def lin_expr(coefs, names, decimals=False):
+    """Expresión lineal «2x1 - x2 + 3x3», omitiendo coeficientes nulos."""
+    out = ""
+    for cf, nm in zip(coefs, names):
+        cf = Fraction(cf)
+        if cf == 0:
+            continue
+        neg = cf < 0
+        mag = abs(cf)
+        body = ("" if mag == 1 else fmt(mag, decimals)) + nm
+        if not out:
+            out = ("-" if neg else "") + body
+        else:
+            out += f" {'-' if neg else '+'} {body}"
+    return out or "0"
+
+
 class MNum:
     """Número a + b·M, con M un número positivo arbitrariamente grande.
 

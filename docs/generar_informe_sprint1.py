@@ -25,7 +25,7 @@ from reportlab.platypus import (Image, KeepTogether, PageBreak, Paragraph, Simpl
 from lp.graphical import graph_2d  # noqa: E402
 from lp.model import EXAMPLES  # noqa: E402
 from lp.numbers import fmt  # noqa: E402
-from lp.pdf_export import _FONT, _FONT_B, _register_fonts  # noqa: E402
+from lp.pdf_export import FONT, FONT_BOLD, register_fonts  # noqa: E402
 from lp.solver import solve  # noqa: E402
 
 AZUL = colors.HexColor("#1f4e79")
@@ -108,24 +108,24 @@ def grafico_ej1_png():
 
 def tabla(data, widths, header=True):
     t = Table(data, colWidths=widths, repeatRows=1 if header else 0)
-    st = [("FONTNAME", (0, 0), (-1, -1), _FONT), ("FONTSIZE", (0, 0), (-1, -1), 9),
+    st = [("FONTNAME", (0, 0), (-1, -1), FONT), ("FONTSIZE", (0, 0), (-1, -1), 9),
           ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#9aa9b8")),
           ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
           ("TOPPADDING", (0, 0), (-1, -1), 3), ("BOTTOMPADDING", (0, 0), (-1, -1), 3)]
     if header:
-        st += [("BACKGROUND", (0, 0), (-1, 0), CLARO), ("FONTNAME", (0, 0), (-1, 0), _FONT_B)]
+        st += [("BACKGROUND", (0, 0), (-1, 0), CLARO), ("FONTNAME", (0, 0), (-1, 0), FONT_BOLD)]
     t.setStyle(TableStyle(st))
     return t
 
 
 def main():
-    _register_fonts()
+    register_fonts()
     ss = getSampleStyleSheet()
-    T = ParagraphStyle("t", parent=ss["Title"], fontName=_FONT_B, fontSize=17, textColor=AZUL, leading=21)
-    ST = ParagraphStyle("st", parent=ss["Normal"], fontName=_FONT, fontSize=10, alignment=1, leading=14)
-    H = ParagraphStyle("h", parent=ss["Heading2"], fontName=_FONT_B, fontSize=13, textColor=AZUL,
+    T = ParagraphStyle("t", parent=ss["Title"], fontName=FONT_BOLD, fontSize=17, textColor=AZUL, leading=21)
+    ST = ParagraphStyle("st", parent=ss["Normal"], fontName=FONT, fontSize=10, alignment=1, leading=14)
+    H = ParagraphStyle("h", parent=ss["Heading2"], fontName=FONT_BOLD, fontSize=13, textColor=AZUL,
                        spaceBefore=12, spaceAfter=4)
-    B = ParagraphStyle("b", parent=ss["BodyText"], fontName=_FONT, fontSize=10, leading=14)
+    B = ParagraphStyle("b", parent=ss["BodyText"], fontName=FONT, fontSize=10, leading=14)
     L = ParagraphStyle("l", parent=B, leftIndent=12, bulletIndent=0)
     P = lambda s: Paragraph(s, B)  # noqa: E731
     cell = ParagraphStyle("c", parent=B, fontSize=9, leading=11.5)

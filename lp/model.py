@@ -3,6 +3,8 @@ import json
 from dataclasses import dataclass, field
 from fractions import Fraction
 
+from .numbers import fmt, lin_expr
+
 SIGNS = ("<=", ">=", "=")
 SIGN_LABEL = {"<=": "≤", ">=": "≥", "=": "="}
 SIGN_FROM_LABEL = {"≤": "<=", "≥": ">=", "=": "=", "<=": "<=", ">=": ">=", "==": "="}
@@ -106,13 +108,10 @@ def parse_problem(sense, c_cells, A_cells, sign_cells, b_cells, name=""):
 
 
 def objective_text(p, decimals=False):
-    from .render import lin_expr
     return f"{'Max' if p.sense == 'max' else 'Min'} Z = {lin_expr(p.c, p.var_names, decimals)}"
 
 
 def constraints_text(p, decimals=False):
-    from .render import lin_expr
-    from .numbers import fmt
     return [f"R{i + 1}: {lin_expr(p.A[i], p.var_names, decimals)} {SIGN_LABEL[p.signs[i]]} {fmt(p.b[i], decimals)}" for i in range(p.m)]
 
 

@@ -17,16 +17,16 @@ from .numbers import fmt, fmt_bound
 from .render import revised_blocks, step_text, tableau_table
 from .standard import standard_form_lines
 
-_FONT = "DejaVu"
-_FONT_B = "DejaVu-Bold"
+FONT = "DejaVu"
+FONT_BOLD = "DejaVu-Bold"
 
 
-def _register_fonts():
-    if _FONT in pdfmetrics.getRegisteredFontNames():
+def register_fonts():
+    if FONT in pdfmetrics.getRegisteredFontNames():
         return
     d = os.path.join(matplotlib.get_data_path(), "fonts", "ttf")
-    pdfmetrics.registerFont(TTFont(_FONT, os.path.join(d, "DejaVuSans.ttf")))
-    pdfmetrics.registerFont(TTFont(_FONT_B, os.path.join(d, "DejaVuSans-Bold.ttf")))
+    pdfmetrics.registerFont(TTFont(FONT, os.path.join(d, "DejaVuSans.ttf")))
+    pdfmetrics.registerFont(TTFont(FONT_BOLD, os.path.join(d, "DejaVuSans-Bold.ttf")))
 
 
 def _esc(s):
@@ -37,7 +37,7 @@ def _table(header, rows, font=7, meta=None, col_widths=None):
     data = [header] + rows
     t = Table(data, colWidths=col_widths, repeatRows=1)
     style = [
-        ("FONTNAME", (0, 0), (-1, -1), _FONT), ("FONTSIZE", (0, 0), (-1, -1), font),
+        ("FONTNAME", (0, 0), (-1, -1), FONT), ("FONTSIZE", (0, 0), (-1, -1), font),
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#dbe6f1")),
         ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#999999")),
         ("ALIGN", (1, 0), (-1, -1), "CENTER"), ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -59,13 +59,13 @@ def _table(header, rows, font=7, meta=None, col_widths=None):
 
 def build_pdf(sol, decimals=False, other=None):
     """Genera el PDF (bytes) con problema, forma estándar, iteraciones, solución, gráfico y sensibilidad."""
-    _register_fonts()
+    register_fonts()
     p, sf = sol.problem, sol.sf
     ss = getSampleStyleSheet()
-    H1 = ParagraphStyle("h1", parent=ss["Title"], fontName=_FONT_B, fontSize=16)
-    H2 = ParagraphStyle("h2", parent=ss["Heading2"], fontName=_FONT_B, fontSize=12, spaceBefore=10)
-    H3 = ParagraphStyle("h3", parent=ss["Heading3"], fontName=_FONT_B, fontSize=10, spaceBefore=6)
-    B = ParagraphStyle("b", parent=ss["BodyText"], fontName=_FONT, fontSize=9, leading=12)
+    H1 = ParagraphStyle("h1", parent=ss["Title"], fontName=FONT_BOLD, fontSize=16)
+    H2 = ParagraphStyle("h2", parent=ss["Heading2"], fontName=FONT_BOLD, fontSize=12, spaceBefore=10)
+    H3 = ParagraphStyle("h3", parent=ss["Heading3"], fontName=FONT_BOLD, fontSize=10, spaceBefore=6)
+    B = ParagraphStyle("b", parent=ss["BodyText"], fontName=FONT, fontSize=9, leading=12)
     S = ParagraphStyle("s", parent=B, fontSize=8, leading=10)
 
     buf = io.BytesIO()

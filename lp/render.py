@@ -1,24 +1,7 @@
 """Utilidades de presentación (texto y tablas) compartidas por la interfaz y el PDF."""
 from fractions import Fraction
 
-from .numbers import fmt, fmt_bound, MNum
-
-
-def lin_expr(coefs, names, decimals=False):
-    """Expresión lineal «2x1 - x2 + 3x3», omitiendo coeficientes nulos."""
-    out = ""
-    for cf, nm in zip(coefs, names):
-        cf = Fraction(cf)
-        if cf == 0:
-            continue
-        neg = cf < 0
-        mag = abs(cf)
-        body = ("" if mag == 1 else fmt(mag, decimals)) + nm
-        if not out:
-            out = ("-" if neg else "") + body
-        else:
-            out += f" {'-' if neg else '+'} {body}"
-    return out or "0"
+from .numbers import fmt, fmt_bound, lin_expr, MNum  # noqa: F401  (lin_expr se reexporta)
 
 
 # ---------------------------------------------------------------- tableros y justificaciones

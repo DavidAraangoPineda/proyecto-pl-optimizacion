@@ -2,7 +2,7 @@
 from dataclasses import dataclass, field
 from fractions import Fraction
 
-from .numbers import MNum, fmt
+from .numbers import MNum, fmt, lin_expr
 
 _FLIP = {"<=": ">=", ">=": "<=", "=": "="}
 
@@ -97,8 +97,6 @@ def _sym(s):
 
 def standard_form_lines(p, sf, decimals=False):
     """Texto de la forma estándar (objetivo y una ecuación por restricción)."""
-    from .render import lin_expr
-
     terms = []
     for j in range(sf.N):
         cj = sf.c[j]

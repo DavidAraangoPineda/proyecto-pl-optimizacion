@@ -8,9 +8,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import Polygon  # noqa: E402
 
+from .geometry import feasible_vertices_2d, is_unbounded_region_2d  # noqa: E402
 from .model import SIGN_LABEL  # noqa: E402
-from .numbers import fmt  # noqa: E402
-from .render import lin_expr  # noqa: E402
+from .numbers import fmt, lin_expr  # noqa: E402
 
 COLORS = ["#1f77b4", "#d62728", "#2ca02c", "#9467bd", "#8c564b", "#e377c2", "#17becf", "#bcbd22"]
 
@@ -24,56 +24,6 @@ class GraphInfo:
     optimal_vertices: list = field(default_factory=list)
     messages: list = field(default_factory=list)
     figure: object = None
-
-
-def _feasible(p, x1, x2):
-    if x1 < 0 or x2 < 0:
-        return False
-    for (a1, a2), s, b in zip(p.A_2d, p.signs, p.b):
-        v = a1 * x1 + a2 * x2
-        if (s == "<=" and v > b) or (s == ">=" and v < b) or (s == "=" and v != b):
-            return False
-    return True
-
-
-def _vertices(p):
-    lines = [(a, b_) for a, b_ in zip(p.A_2d, p.b)] + [((Fraction(1), Fraction(0)), Fraction(0)),
-                                                         ((Fraction(0), Fraction(1)), Fraction(0))]
-    pts = set()
-    for i in range(len(lines)):
-        for j in range(i + 1, len(lines)):
-            (a1, a2), b1 = lines[i]
-            (c1, c2), b2 = lines[j]
-            det = a1 * c2 - a2 * c1
-            if det == 0:
-                continue
-            x1 = (b1 * c2 - a2 * b2) / det
-            x2 = (a1 * b2 - b1 * c1) / det
-            if _feasible(p, x1, x2):
-                pts.add((x1, x2))
-    return sorted(pts)
-
-
-def _is_unbounded_region(p):
-    """La región (no vacía) es no acotada si existe una dirección d ≥ 0, d ≠ 0 con A·d (≤,≥,=) 0."""
-    cands = [(Fraction(1), Fraction(0)), (Fraction(0), Fraction(1))]
-    for a1, a2 in p.A_2d:
-        for sg in (1, -1):
-            d = (-a2 * sg, a1 * sg)
-            if d != (0, 0):
-                cands.append(d)
-    for d1, d2 in cands:
-        if d1 < 0 or d2 < 0 or (d1 == 0 and d2 == 0):
-            continue
-        ok = True
-        for (a1, a2), s in zip(p.A_2d, p.signs):
-            v = a1 * d1 + a2 * d2
-            if (s == "<=" and v > 0) or (s == ">=" and v < 0) or (s == "=" and v != 0):
-                ok = False
-                break
-        if ok:
-            return True
-    return False
 
 
 def _clip(poly, a1, a2, b, sign):
@@ -116,13 +66,13 @@ def graph_2d(problem, solution=None):
             f"El método gráfico no aplica: el problema tiene {problem.n} variables y solo se puede "
             "graficar con exactamente 2 variables."])
 
-    p = _P(problem)
     info = GraphInfo(True)
-    verts = _vertices(p)
+    verts = feasible_vertices_2d(problem)
+    pairs = [(row[0], row[1]) for row in problem.A]
     c1, c2 = problem.c
     info.vertices = [(x1, x2, c1 * x1 + c2 * x2) for x1, x2 in verts]
     info.empty = not verts
-    info.bounded = (not info.empty) and (not _is_unbounded_region(p))
+    info.bounded = (not info.empty) and (not is_unbounded_region_2d(problem))
 
     status = solution.status if solution is not None else None
     if info.empty:
@@ -137,7 +87,7 @@ def graph_2d(problem, solution=None):
 
     # ----- ventana de dibujo
     ints = []
-    for (a1, a2), b in zip(p.A_2d, p.b):
+    for (a1, a2), b in zip(pairs, problem.b):
         if a1 != 0 and b / a1 > 0:
             ints.append(float(b / a1))
         if a2 != 0 and b / a2 > 0:
@@ -161,7 +111,7 @@ def graph_2d(problem, solution=None):
 
     # ----- región factible sombreada
     poly = [(0.0, 0.0), (X, 0.0), (X, Y), (0.0, Y)]
-    for (a1, a2), s, b in zip(p.A_2d, p.signs, p.b):
+    for (a1, a2), s, b in zip(pairs, problem.signs, problem.b):
         fa1, fa2, fb = float(a1), float(a2), float(b)
         if s == "<=":
             poly = _clip(poly, fa1, fa2, fb, 1)
@@ -182,7 +132,7 @@ def graph_2d(problem, solution=None):
 
     # ----- restricciones rotuladas
     xs = [-0.06 * X, X]
-    for i, ((a1, a2), s, b) in enumerate(zip(p.A_2d, p.signs, p.b)):
+    for i, ((a1, a2), s, b) in enumerate(zip(pairs, problem.signs, problem.b)):
         col = COLORS[i % len(COLORS)]
         lab = f"R{i + 1}: {lin_expr([a1, a2], ['x1', 'x2'])} {SIGN_LABEL[s]} {fmt(b)}"
         fa1, fa2, fb = float(a1), float(a2), float(b)
@@ -241,12 +191,3 @@ def graph_2d(problem, solution=None):
     fig.tight_layout()
     info.figure = fig
     return info
-
-
-class _P:
-    """Vista del problema con los coeficientes como pares (a1, a2)."""
-
-    def __init__(self, problem):
-        self.A_2d = [(row[0], row[1]) for row in problem.A]
-        self.signs = problem.signs
-        self.b = problem.b
