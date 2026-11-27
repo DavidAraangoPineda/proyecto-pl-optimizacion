@@ -13,6 +13,7 @@ from lp.model import (EXAMPLES, SIGN_LABEL, ValidationError, constraints_text, o
                       parse_problem, problem_to_json, raw_from_json)
 from lp.numbers import fmt, fmt_bound
 from lp.pdf_export import build_pdf
+from lp.presentation import presentation_html
 from lp.render import revised_blocks, step_text, tableau_table
 from lp.solver import METHODS, solve
 from lp.standard import standard_form_lines
@@ -169,6 +170,7 @@ if problem is not None:
 if go and problem is not None:
     ss.result = {"problem": problem, "sols": {k: solve(problem, k) for k in METHODS}}
     ss.pdf = None
+    ss.presentacion = None
 
 # ====================================================================== resultados
 
@@ -377,3 +379,16 @@ with tabs[5]:
             ss.pdf = build_pdf(sol, decimals)
     if ss.pdf:
         st.download_button("⬇️ Descargar PDF", ss.pdf, file_name="solucion_programacion_lineal.pdf", mime="application/pdf")
+
+    st.divider()
+    st.markdown("### 🎬 Presentación animada")
+    st.markdown("Genera **El viaje del Simplex** para este problema: un solo archivo HTML con la explicación narrada "
+                "por capítulos (región factible, forma estándar, iteraciones en tablero con la Gran M, el mismo recorrido con el "
+                "simplex revisado y su comparación, sensibilidad y casos especiales). "
+                "Ábrelo en Microsoft Edge, pulsa **F** para pantalla completa y **Av Pág** para avanzar.")
+    if st.button("Generar presentación"):
+        with st.spinner("Preparando la presentación con el motor propio..."):
+            ss.presentacion = presentation_html(problem)
+    if ss.get("presentacion"):
+        st.download_button("⬇️ Descargar presentación (HTML)", ss.presentacion, file_name="viaje_del_simplex.html",
+                           mime="text/html")

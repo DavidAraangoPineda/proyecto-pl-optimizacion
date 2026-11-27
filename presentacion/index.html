@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>El viaje del Simplex</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <main id="escenario" class="solo-visual">
+    <div id="visual">
+      <canvas id="lienzo" aria-label="Gráfica del problema"></canvas>
+    </div>
+    <div id="pizarra" aria-live="polite"></div>
+
+    <div id="hud-capitulo" class="hud"></div>
+    <div id="hud-z" class="hud"><span>VALOR DE Z</span><b id="hud-z-valor">—</b></div>
+    <div id="subtitulo" role="status"></div>
+    <div id="aviso-voz" role="alert"></div>
+
+    <div id="portada">
+      <canvas id="portada-fondo" aria-hidden="true"></canvas>
+      <div class="sobre">PROGRAMACIÓN LINEAL · OPTIMIZACIÓN · UDEA</div>
+      <h1>El viaje del <span>Simplex</span></h1>
+      <p>Método de la Gran M y simplex revisado, paso a paso</p>
+      <p id="portada-problema"></p>
+      <div class="equipo">David Arango Pineda · Juan Ignacio Parra</div>
+      <div class="tecla">Av Pág o clic para comenzar · <kbd>H</kbd> todo de corrido · <kbd>F</kbd> pantalla completa</div>
+    </div>
+  </main>
+
+  <aside id="panel">
+    <header>
+      <p class="sobre">PRESENTACIÓN</p>
+      <h1>El viaje del <span>Simplex</span></h1>
+      <p class="sub">Todo lo que se ve lo calculó el motor propio del proyecto.</p>
+    </header>
+
+    <button id="btn-todo" class="primario" type="button">▶ Explicación completa</button>
+    <div class="capitulos" id="capitulos"></div>
+
+    <section>
+      <h3>Problema</h3>
+      <select id="sel-problema" aria-label="Problema a presentar"></select>
+      <div id="info-problema"></div>
+    </section>
+
+    <section>
+      <h3>Sonido</h3>
+      <div class="fila">
+        <label><input id="chk-voz" type="checkbox" checked> Voz</label>
+        <label><input id="chk-musica" type="checkbox" checked> Música</label>
+        <label><input id="chk-efectos" type="checkbox" checked> Efectos</label>
+      </div>
+      <label for="sel-voz">Voz narradora</label>
+      <select id="sel-voz"></select>
+      <label for="r-volumen">Volumen</label>
+      <input id="r-volumen" type="range" min="0" max="1" step="0.05" value="0.8">
+      <label for="r-ritmo">Ritmo de la explicación</label>
+      <input id="r-ritmo" type="range" min="0.6" max="1.6" step="0.1" value="1">
+    </section>
+
+    <section>
+      <h3>Teclas</h3>
+      <div class="teclas">
+        <kbd>Av Pág</kbd> / <kbd>→</kbd> siguiente capítulo<br>
+        <kbd>Re Pág</kbd> / <kbd>←</kbd> capítulo anterior<br>
+        <kbd>H</kbd> explicación completa · <kbd>1</kbd>–<kbd>8</kbd> capítulo<br>
+        <kbd>F</kbd> pantalla completa · <kbd>M</kbd> silencio<br>
+        <kbd>C</kbd> modo cine · <kbd>Esc</kbd> mostrar controles<br>
+        Arrastra el 3D para girarlo
+      </div>
+    </section>
+  </aside>
+
+  <script src="js/audio.js"></script>
+  <script src="js/datos.js"></script>
+  <script src="js/dibujo.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

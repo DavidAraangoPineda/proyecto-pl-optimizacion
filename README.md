@@ -21,6 +21,7 @@ Aplicación web (Streamlit) que resuelve problemas de programación lineal con *
 | Casos especiales: infactible, no acotado, óptimos múltiples, degenerado (mensajes claros) | `lp/analysis.py` |
 | Interfaz gráfica: agregar/quitar variables y restricciones, editar y re-resolver sin reiniciar | `app.py` |
 | **Bonos:** dos métodos comparados · fracciones exactas · exportar a PDF · cargar/guardar JSON | pestañas «Comparar métodos» y «Exportar», barra lateral |
+| **Bono:** presentación animada y narrada «El viaje del Simplex» (un solo HTML, sin internet) | `lp/presentation.py`, `presentacion/`, pestaña «Exportar» |
 
 ## Requisitos
 
@@ -66,6 +67,8 @@ lp/revised.py           Simplex revisado (B⁻¹ explícita)
 lp/analysis.py          Interpretación, casos especiales y sensibilidad
 lp/graphical.py         Método gráfico
 lp/pdf_export.py        Exportación a PDF
+lp/presentation.py      Datos y HTML de la presentación animada
+presentacion/           Presentación (HTML/CSS/JS); `python -m lp.presentation` regenera js/datos.js
 tests/                  Pruebas (scipy solo para verificar)
 docs/                   Propuesta, planeación de sprints y manual
 examples/               Problemas de ejemplo en JSON
