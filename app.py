@@ -9,7 +9,7 @@ import pandas as pd
 import streamlit as st
 
 from interfaz import ayuda
-from lp.graphical import graph_2d
+from lp.graphical import figure_png, graph_2d
 from lp.model import (EXAMPLES, SIGN_LABEL, ValidationError, constraints_text, objective_text,
                       parse_problem, problem_to_json, raw_from_json)
 from lp.numbers import fmt, fmt_bound
@@ -314,16 +314,30 @@ with tabs[2]:
     if not info.applicable:
         st.warning("⚠️ " + info.messages[0])
     else:
-        for msg in info.messages:
-            st.warning(msg) if ("VACÍA" in msg or "no acotada" in msg.lower()) else st.info(msg)
-        st.pyplot(info.figure, clear_figure=True)
-        if info.vertices:
-            st.markdown("**Vértices de la región factible y su valor de Z**")
-            opt = {(v[0], v[1]) for v in info.optimal_vertices}
-            st.dataframe(pd.DataFrame([[f"({fmt(a, decimals)}, {fmt(b, decimals)})", fmt(z, decimals),
-                                        "⭐ óptimo" if (a, b) in opt and sol.status == "optimal" else ""]
-                                       for a, b, z in info.vertices], columns=["Vértice (x1, x2)", "Z", ""]),
-                         hide_index=True)
+        # El gráfico va en una columna de ancho controlado: a todo el ancho de la página se vería
+        # desproporcionado. Al lado, el resumen y la tabla de vértices.
+        col_graf, col_info = st.columns([1, 1], gap="large")
+        with col_graf:
+            st.image(figure_png(info.figure), width=720)
+        with col_info:
+            for msg in info.messages:
+                st.warning(msg) if ("VACÍA" in msg or "no acotada" in msg.lower()) else st.info(msg)
+            if sol.status == "optimal" and info.optimal_vertices:
+                ox1, ox2, oz = info.optimal_vertices[0]
+                if len(info.optimal_vertices) > 1:
+                    pb = info.optimal_vertices[-1]
+                    st.success(f"**Óptimos múltiples:** Z = {fmt(oz, decimals)} en todo el segmento entre "
+                               f"({fmt(ox1, decimals)}, {fmt(ox2, decimals)}) y ({fmt(pb[0], decimals)}, {fmt(pb[1], decimals)}).")
+                else:
+                    st.success(f"**Óptimo:** x1 = {fmt(ox1, decimals)}, x2 = {fmt(ox2, decimals)}, Z = {fmt(oz, decimals)}")
+            if info.vertices:
+                st.markdown("**Vértices de la región factible**")
+                opt = {(v[0], v[1]) for v in info.optimal_vertices}
+                st.dataframe(pd.DataFrame([[f"({fmt(a, decimals)}, {fmt(b, decimals)})", fmt(z, decimals),
+                                            "⭐ óptimo" if (a, b) in opt and sol.status == "optimal" else ""]
+                                           for a, b, z in info.vertices], columns=["Vértice (x1, x2)", "Z", ""]),
+                             hide_index=True, width="stretch")
+            st.markdown(ayuda.LEER_GRAFICO)
 
 # ---- Sensibilidad
 with tabs[3]:

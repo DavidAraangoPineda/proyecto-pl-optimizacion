@@ -136,7 +136,7 @@ def build_pdf(sol, decimals=False, other=None):
             el.append(PageBreak())
             el.append(Paragraph("6. Método gráfico", H2))
             img = io.BytesIO()
-            info.figure.savefig(img, format="png", dpi=130)
+            info.figure.savefig(img, format="png", dpi=130, bbox_inches="tight")
             import matplotlib.pyplot as plt
             plt.close(info.figure)
             img.seek(0)

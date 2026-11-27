@@ -2,6 +2,8 @@
 from dataclasses import dataclass, field
 from fractions import Fraction
 
+import io
+
 import matplotlib
 
 matplotlib.use("Agg")
@@ -119,7 +121,7 @@ def graph_2d(problem, solution=None, dark=False):
     X = Y = lim
 
     C = DARK if dark else LIGHT
-    fig, ax = plt.subplots(figsize=(8.2, 6.4), dpi=110)
+    fig, ax = plt.subplots(figsize=(7.0, 6.2), dpi=110)
     fig.patch.set_facecolor(C["bg"])
     ax.set_facecolor(C["bg"])
     for sp in ax.spines.values():
@@ -165,16 +167,35 @@ def graph_2d(problem, solution=None, dark=False):
             ax.plot([fb / fa1] * 2, [-0.06 * Y, Y], color=col, lw=1.8, label=lab, zorder=2)
 
     # ----- vértices con su Z
+    # Las etiquetas se alejan del centro de la región (hacia afuera) para no tapar la región ni las rectas;
+    # la del óptimo va hacia adentro, porque hacia afuera está la flecha de mejora de Z.
     opt_set = {(v[0], v[1]) for v in info.optimal_vertices}
-    for k, (x1, x2, z) in enumerate(info.vertices):
+    cx = sum(float(v[0]) for v in info.vertices) / max(len(info.vertices), 1)
+    cy = sum(float(v[1]) for v in info.vertices) / max(len(info.vertices), 1)
+    for x1, x2, z in info.vertices:
         is_opt = (x1, x2) in opt_set
-        ax.scatter([float(x1)], [float(x2)], s=95 if is_opt else 45, color=C["opt"] if is_opt else C["vertex"],
+        fx, fy = float(x1), float(x2)
+        ax.scatter([fx], [fy], s=150 if is_opt else 45, color=C["opt"] if is_opt else C["vertex"],
                    edgecolor=C["vertex"], marker="*" if is_opt else "o", zorder=5)
-        dx = 0.02 * X if float(x1) < 0.75 * X else -0.02 * X
-        ax.annotate(f"({_pretty(x1)}, {_pretty(x2)})\nZ = {_pretty(z)}", (float(x1), float(x2)),
-                    xytext=(float(x1) + dx, float(x2) + 0.035 * Y), fontsize=8.5, zorder=6,
-                    ha="left" if dx > 0 else "right", color=C["fg"],
-                    bbox=dict(boxstyle="round,pad=0.2", fc=C["label_bg"], ec=C["label_edge"], alpha=0.85))
+        dx, dy = fx - cx, fy - cy
+        if is_opt and status != "unbounded":
+            dx, dy = -dx, -dy
+        norm = (dx * dx + dy * dy) ** 0.5 or 1.0
+        ox, oy = 0.05 * X * dx / norm, 0.05 * Y * dy / norm
+        # que la etiqueta quede dentro del área visible (los vértices sobre los ejes la empujarían afuera)
+        if fx + ox < 0.03 * X:
+            ox = abs(ox) or 0.03 * X
+        elif fx + ox > 0.8 * X:
+            ox = -abs(ox) or -0.03 * X
+        if fy + oy < 0.03 * Y:
+            oy = abs(oy) or 0.03 * Y
+        elif fy + oy > 0.9 * Y:
+            oy = -abs(oy) or -0.03 * Y
+        ax.annotate(f"({_pretty(x1)}, {_pretty(x2)})\nZ = {_pretty(z)}", (fx, fy), xytext=(fx + ox, fy + oy),
+                    fontsize=9, zorder=6, ha="left" if ox >= 0 else "right", va="bottom" if oy >= 0 else "top",
+                    color=C["fg"], fontweight="bold" if is_opt else "normal",
+                    bbox=dict(boxstyle="round,pad=0.25", fc=C["label_bg"],
+                              ec=C["opt"] if is_opt else C["label_edge"], alpha=0.9))
 
     # ----- recta de la función objetivo (isoutilidad) en el óptimo
     if info.optimal_vertices and status != "unbounded" and (c1 != 0 or c2 != 0):
@@ -209,9 +230,20 @@ def graph_2d(problem, solution=None, dark=False):
     ax.set_ylabel("x2", color=C["fg"])
     sense = "Max" if problem.sense == "max" else "Min"
     ax.set_title(f"Método gráfico — {sense} Z = {lin_expr(problem.c, ['x1', 'x2'])}", color=C["fg"])
-    leg = ax.legend(loc="upper right", fontsize=8, framealpha=0.9, facecolor=C["label_bg"], edgecolor=C["label_edge"])
+    # La leyenda va debajo del gráfico para no tapar rectas ni vértices.
+    leg = ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2, fontsize=9, framealpha=0.9,
+                    facecolor=C["label_bg"], edgecolor=C["label_edge"])
     for t in leg.get_texts():
         t.set_color(C["fg"])
     fig.tight_layout()
     info.figure = fig
     return info
+
+
+def figure_png(fig, dpi=150):
+    """PNG (bytes) de una figura, recortado a su contenido; cierra la figura para liberar memoria."""
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=dpi, bbox_inches="tight", facecolor=fig.get_facecolor())
+    plt.close(fig)
+    return buf.getvalue()
+

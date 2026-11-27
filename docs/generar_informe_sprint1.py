@@ -100,7 +100,7 @@ def grafico_ej1_png():
     p = list(EXAMPLES.values())[0]
     info = graph_2d(p, solve(p))
     buf = io.BytesIO()
-    info.figure.savefig(buf, format="png", dpi=120)
+    info.figure.savefig(buf, format="png", dpi=120, bbox_inches="tight")
     plt.close(info.figure)
     buf.seek(0)
     return buf

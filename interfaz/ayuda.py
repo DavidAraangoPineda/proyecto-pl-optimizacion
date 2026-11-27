@@ -89,6 +89,15 @@ GRAFICO = """
 - Una restricción **redundante** no toca la región: quitarla no cambia nada.
 """
 
+LEER_GRAFICO = """
+**Cómo leer el gráfico**
+- Zona sombreada: **región factible** (cumple todas las restricciones).
+- Líneas de colores: una por restricción (ver la leyenda debajo del gráfico).
+- Puntos: **vértices**, con sus coordenadas y su valor de Z.
+- ⭐ y recta punteada: el **óptimo** y la recta de Z que pasa por él.
+- Flecha: dirección en la que **mejora Z**; ya no se puede avanzar sin salir de la región.
+"""
+
 SENSIBILIDAD = """
 **Qué muestra:** cuánto se puede cambiar un dato sin que cambie la solución óptima.
 
