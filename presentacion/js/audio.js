@@ -367,9 +367,25 @@
     return /natural/i.test(v.name);
   }
 
+  // Voces femeninas neuronales de Microsoft Edge en español, en orden de preferencia:
+  // primero Salomé (Colombia), luego otras latinoamericanas y por último las de España.
+  const MUJERES_EDGE = ['Salome', 'Dalia', 'Paola', 'Camila', 'Elena', 'Valentina', 'Catalina', 'Andrea', 'Sofia',
+    'Marta', 'Karla', 'Lorena', 'Margarita', 'Maria', 'Ramona', 'Belkys', 'Yolanda', 'Tania', 'Karina', 'Paloma',
+    'Teresa', 'Elvira', 'Ximena', 'Abril', 'Irene', 'Lia', 'Triana', 'Vera', 'Estrella', 'Larissa', 'Arabella'];
+
+  function nombrePropio(v) {
+    return v.name.replace(/^Microsoft\s+/, '').split(/\s+/)[0];
+  }
+
+  /** Voz femenina neuronal de Edge (las que suenan naturales). */
+  function esMujerDeEdge(v) {
+    return esDeEdge(v) && MUJERES_EDGE.includes(nombrePropio(v));
+  }
+
   function puntaje(v) {
     let s = 0;
-    if (esDeEdge(v)) s += 1000; // la voz de Edge siempre va primero
+    if (esMujerDeEdge(v)) s += 5000 - MUJERES_EDGE.indexOf(nombrePropio(v)) * 10; // la recomendada va primero
+    if (esDeEdge(v)) s += 1000;
     if (region(v) === 'CO') s += 300;
     else if (esLatinoamericana(v)) s += 200;
     if (/online/i.test(v.name)) s += 40;
@@ -379,14 +395,29 @@
 
   Sonido.esLatinoamericana = esLatinoamericana;
   Sonido.esDeEdge = esDeEdge;
+  Sonido.esMujerDeEdge = esMujerDeEdge;
+
+  /** La única voz que se recomienda: la voz femenina de Edge (Salomé si está). null si no hay ninguna. */
+  Sonido.recomendada = function () {
+    return todasLasVoces().find(esMujerDeEdge) || null;
+  };
 
   /** Nombre corto para mostrar: "Microsoft Salome Online (Natural) - Spanish (Colombia)" → "Salome". */
   Sonido.nombreCorto = function (v) {
     return v ? v.name.replace(/^Microsoft\s+/, '').replace(/\s+(Online|Desktop).*$/, '').replace(/\s+-\s+.*$/, '') : '';
   };
 
-  Sonido.voces = function () {
+  function todasLasVoces() {
     return vocesEspanol().sort((a, b) => puntaje(b) - puntaje(a));
+  }
+
+  /**
+   * Voces que se ofrecen en el selector: solo la recomendada (voz femenina de Edge).
+   * Si el navegador no la tiene (por ejemplo, fuera de Edge), se ofrecen las demás voces en español.
+   */
+  Sonido.voces = function () {
+    const r = Sonido.recomendada();
+    return r ? [r] : todasLasVoces();
   };
 
   // Voces que fallaron en esta sesión (por ejemplo, voces en línea sin respuesta del servidor).
@@ -404,7 +435,8 @@
    */
   Sonido.vozActual = function () {
     if (vozElegida && !vocesFallidas.has(vozElegida.name)) return vozElegida;
-    const disponibles = Sonido.voces().filter((v) => !vocesFallidas.has(v.name));
+    // si la recomendada falla, se recurre a cualquier otra voz en español para no quedarse sin narración
+    const disponibles = todasLasVoces().filter((v) => !vocesFallidas.has(v.name));
     if (vocesFallidas.size > 0) {
       const locales = disponibles.filter((v) => v.localService);
       if (locales.length) return locales[0];

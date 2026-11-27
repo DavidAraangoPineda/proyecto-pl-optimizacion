@@ -47,6 +47,28 @@
   /** Escapa cada elemento de una lista y los une. */
   const EL = (lista, sep = ', ') => lista.map(E).join(sep);
 
+  /**
+   * Tipografía matemática sobre HTML ya escapado: x1 → x₁ en cursiva, cj → c_j, "-" → "−" y 2/5 apilada.
+   * Solo transforma el texto; las etiquetas HTML se dejan intactas.
+   */
+  function mate(html) {
+    return String(html).split(/(<[^>]*>)/).map((parte, i) => (i % 2 ? parte : mateTexto(parte))).join('');
+  }
+
+  function mateTexto(t) {
+    return t
+      .replace(/(^|[\s(=,;:[·+−])-(?=[\dMa-zA-Z(])/g, '$1−')
+      .replace(/ - /g, ' − ')
+      .replace(/\b(\d+)\/(\d+)\b/g, '<span class="fr"><span>$1</span><span>$2</span></span>')
+      .replace(/(?<![A-Za-z_])([xyseaz])(\d+)\b/g, '<i>$1</i><sub>$2</sub>')
+      .replace(/\b([cz])j\b/g, '<i>$1</i><sub>j</sub>')
+      .replace(/\b([cx])B\b/g, '<i>$1</i><sub>B</sub>')
+      .replace(/\ba_e\b/g, '<i>a</i><sub>e</sub>')
+      .replace(/\baj\b/g, '<i>a</i><sub>j</sub>')
+      .replace(/\bZ(′?)(?=\s|$|\))/g, '<i>Z</i>$1')
+      .replace(/(?<![A-Za-z])M(?![A-Za-z])/g, '<i>M</i>');
+  }
+
   function textoPlano(html) {
     const d = document.createElement('div');
     d.innerHTML = html;
@@ -61,7 +83,7 @@
     t = t.replace(/cj\s*[−-]\s*zj/g, 'c j menos z j');
     t = t.replace(/B⁻¹/g, 'B inversa');
     t = t.replace(/Z′|Z'/g, 'Z prima');
-    t = t.replace(/\b([xsea])(\d+)\b/g, (m, l, d) => ({ x: 'equis ', s: 'ese ', e: 'e ', a: 'a ' }[l] + d));
+    t = t.replace(/(?<![A-Za-z_])([xsea])(\d+)\b/g, (m, l, d) => ({ x: ' equis ', s: ' ese ', e: ' e ', a: ' a ' }[l] + d));
     t = t.replace(/\((\d+)\/(\d+)\)M/g, '$1 sobre $2 eme');
     t = t.replace(/(-?\d+)\/(\d+)/g, '$1 sobre $2');
     t = t.replace(/(^|[\s(=,;:])[-−]\s?(?=[\dMa-zA-Z(])/g, '$1menos ');
@@ -79,7 +101,7 @@
       s.classList.remove('visible');
       return;
     }
-    s.innerHTML = html;
+    s.innerHTML = mate(html);
     s.classList.add('visible');
   }
 
@@ -108,11 +130,11 @@
   }
 
   function pizarra(html) {
-    $('pizarra').innerHTML = html;
+    $('pizarra').innerHTML = mate(html);
   }
 
   function agregar(html) {
-    $('pizarra').insertAdjacentHTML('beforeend', html);
+    $('pizarra').insertAdjacentHTML('beforeend', mate(html));
     const p = $('pizarra');
     p.scrollTo({ top: p.scrollHeight, behavior: 'smooth' });
   }
@@ -124,7 +146,7 @@
       return;
     }
     h.querySelector('span').textContent = etiqueta;
-    $('hud-z-valor').textContent = valor;
+    $('hud-z-valor').innerHTML = mate(E(valor));
     h.classList.add('visible');
   }
 
@@ -143,7 +165,7 @@
   }
 
   const sentidoTxt = (s) => (s.sentido === 'max' ? 'maximizar' : 'minimizar');
-  const nombreSub = (n) => E(n.replace(/(\d+)/, (d) => [...d].map((c) => '₀₁₂₃₄₅₆₇₈₉'[c]).join('')));
+  const nombreSub = (n) => E(n);   // la tipografía (x₁ en cursiva) la pone mate() al mostrarlo
   const punto = (s, xs) => '(' + xs.join(', ') + ')';
   const conFichas = (eq) => E(eq).replace(/\b([sea])(\d+)\b/g, (m, l) =>
     `<span class="ficha ${{ s: 'slack', e: 'surplus', a: 'art' }[l]}">${m}</span>`);
@@ -296,7 +318,7 @@
       let h = `<div class="tarjeta" id="std-${i}"><div class="ecuacion"><span class="r">R${i + 1}</span>${E(f.orig)}</div>`;
       if (f.flip) h += `<div class="flecha-tr">× (−1) porque el lado derecho es negativo ↓</div><div class="ecuacion"><span class="r">R${i + 1}</span>${E(f.normal)}</div>`;
       h += `<div class="flecha-tr">↓</div><div class="ecuacion"><span class="r">R${i + 1}</span>${conFichas(f.ecuacion)}</div></div>`;
-      $('std').insertAdjacentHTML('beforeend', h);
+      $('std').insertAdjacentHTML('beforeend', mate(h));
       $(`std-${i}`).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       Sonido.toque(6 + i);
       const tipos = f.agregadas.map((a) => a.tipo);
@@ -396,7 +418,7 @@
           await N.narrar(`Iteración ${E(p.k)}: <span class="v">entra ${E(p.entra)}</span> (cj − zj = ${E(p.dj)}) y <span class="s">sale ${E(p.sale)}</span>, con pivote ${E(p.pivote)}.`, 2600);
         } else {
           await N.narrar(`Miramos la fila cj − zj. La mayor es la de ${E(p.entra)}: ${E(p.dj)}. <span class="v">Entra ${E(p.entra)}</span>${p.djM ? ', porque su parte de M es la más grande: es la que más rápido saca a las artificiales.' : ', porque es la que más mejora Z por cada unidad.'}`);
-          $('extra').innerHTML = `<p class="pz-titulo" style="margin-top:12px">Prueba de la razón mínima</p>${razonesHTML(p)}`;
+          $('extra').innerHTML = mate(`<p class="pz-titulo" style="margin-top:12px">Prueba de la razón mínima</p>${razonesHTML(p)}`);
           await N.pausa(80);
           crecerRazones();
           await N.pausa(900);
@@ -408,7 +430,7 @@
           }
         }
         const tabla = $('pizarra').querySelector('.tab-envoltura');
-        tabla.outerHTML = tablaHTML(p, { col: true, fila: true, pivote: true });
+        tabla.outerHTML = mate(tablaHTML(p, { col: true, fila: true, pivote: true }));
         Sonido.toque(8);
         if (!breve) await N.narrar(`El pivote es <b>${E(p.pivote)}</b>: dividimos su fila entre ${E(p.pivote)} y hacemos cero el resto de la columna.`, 2400);
         else await N.pausa(700);
@@ -573,7 +595,7 @@
         $(`b-${a}`).style.height = (v / max) * 85 + '%';
         $(`v-${a}`).textContent = v ? (Math.round(v * 1000) / 1000).toString() : '0';
       });
-      $('gm-iter').innerHTML = `Iteración ${E(p.k)} · ${p.zOrig.conM ? 'Z′ = ' : 'Z = '}<b>${E(p.zOrig.txt)}</b>`;
+      $('gm-iter').innerHTML = mate(`Iteración ${E(p.k)} · ${p.zOrig.conM ? 'Z′ = ' : 'Z = '}<b>${E(p.zOrig.txt)}</b>`);
     };
     if (t === '2d') {
       Object.assign(v2.estado, { ejes: 1, restr: s.m, region: 1, vertices: 1 });
@@ -642,9 +664,9 @@
           v2.estado.lineaZ = null;
         }
         hudZ(f.bs, `LADO DERECHO DE R${A.restr + 1}`);
-        $('sens-vivo').innerHTML = f.x
+        $('sens-vivo').innerHTML = mate(f.x
           ? `R${A.restr + 1}: b = <b>${E(f.bs)}</b> → Z = <b>${Dibujo.bonito(f.z)}</b> · ${f.dentro ? '<span style="color:var(--verde)">dentro del rango</span>' : '<span style="color:var(--salmon)">fuera del rango: cambia la base</span>'}`
-          : `R${A.restr + 1}: b = <b>${E(f.bs)}</b> → ${f.estado === 'infeasible' ? 'infactible' : 'sin óptimo'}`;
+          : `R${A.restr + 1}: b = <b>${E(f.bs)}</b> → ${f.estado === 'infeasible' ? 'infactible' : 'sin óptimo'}`);
       };
       aplicar(fr[i0]);
       await N.narrar(`El <b>precio sombra</b> dice cuánto cambia Z por cada unidad extra de un lado derecho. Movamos el de <b>R${A.restr + 1}</b>, que hoy vale ${E(A.b0s)}.`);
@@ -702,7 +724,7 @@
       const s = C[k];
       usarVisual(s);
       const e = v2.estado;
-      $('caso-detalle').innerHTML = `<div class="tarjeta"><div class="ecuacion" style="font-size:17px">${E(s.objetivo)}</div>${s.restricciones.map((r) => `<div class="ecuacion" style="font-size:17px">${E(r)}</div>`).join('')}</div>`;
+      $('caso-detalle').innerHTML = mate(`<div class="tarjeta"><div class="ecuacion" style="font-size:17px">${E(s.objetivo)}</div>${s.restricciones.map((r) => `<div class="ecuacion" style="font-size:17px">${E(r)}</div>`).join('')}</div>`);
       Sonido.barrido(true);
       e.ejes = 1;
       await N.anim(1000, (q) => (e.restr = q * s.m));
@@ -857,8 +879,8 @@
     cancelar();
     esc = s;
     capituloActual = -1;
-    $('info-problema').textContent = [s.objetivo, ...s.restricciones].join('\n');
-    $('portada-problema').textContent = `${s.nombre}: ${s.objetivo}`;
+    $('info-problema').innerHTML = mate(EL([s.objetivo, ...s.restricciones], '\n'));
+    $('portada-problema').innerHTML = mate(`${E(s.nombre)}: ${E(s.objetivo)}`);
     $('portada').style.display = '';
     $('portada').classList.remove('oculta');
     $('hud-capitulo').classList.remove('visible');
@@ -906,14 +928,19 @@
       const sv = $('sel-voz');
       const actual = Sonido.vozActual();
       sv.innerHTML = '';
+      const recomendada = Sonido.recomendada();
       Sonido.voces().forEach((v) => {
         const o = document.createElement('option');
         o.value = v.name;
-        o.textContent = `${Sonido.nombreCorto(v)} (${v.lang})`;
+        o.textContent = v === recomendada
+          ? `${Sonido.nombreCorto(v)} · Microsoft Edge (recomendada)`
+          : `${Sonido.nombreCorto(v)} (${v.lang})`;
         if (actual && v.name === actual.name) o.selected = true;
         sv.appendChild(o);
       });
       if (!sv.options.length) sv.innerHTML = '<option>Sin voces en español (solo subtítulos)</option>';
+      $('nota-voz').textContent = recomendada ? ''
+        : 'Para escuchar la voz recomendada (Salomé, voz de mujer) abre la presentación en Microsoft Edge.';
     };
     llenarVoces();
     Sonido.alCambiarVoces(llenarVoces);

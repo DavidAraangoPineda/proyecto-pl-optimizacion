@@ -58,7 +58,17 @@
     return recortar(recortar(poly, r.a1, r.a2, b, 1), r.a1, r.a2, b, -1);
   }
 
+  const SUB = { 0: '₀', 1: '₁', 2: '₂', 3: '₃', 4: '₄', 5: '₅', 6: '₆', 7: '₇', 8: '₈', 9: '₉' };
+  /** Fórmula para el lienzo (sin HTML): x1 → x₁ y "-" → "−". */
+  function mate(t) {
+    return String(t)
+      .replace(/(?<![A-Za-z_])([xsea])(\d+)\b/g, (m, l, d) => l + [...d].map((c) => SUB[c]).join(''))
+      .replace(/(^|[\s(=,:])-(?=[\d.a-zA-Z(])/g, '$1−')
+      .replace(/ - /g, ' − ');
+  }
+
   function caja(ctx, x, y, lineas, color, fondo = 'rgba(10,15,31,0.85)', tam = 13) {
+    lineas = lineas.map(mate);
     ctx.font = `600 ${tam}px Segoe UI, system-ui, sans-serif`;
     const w = Math.max(...lineas.map((l) => ctx.measureText(l).width)) + 14;
     const h = lineas.length * (tam + 4) + 8;
@@ -498,7 +508,7 @@
         ctx.stroke();
         ctx.fillStyle = TEXTO;
         ctx.font = 'italic 600 16px Segoe UI';
-        ctx.fillText(nombres[k], b[0] + 6, b[1]);
+        ctx.fillText(mate(nombres[k]), b[0] + 6, b[1]);
       }
       ctx.globalAlpha = 1;
 
@@ -541,7 +551,7 @@
           if (e.conZ) {
             ctx.font = '11px Segoe UI';
             ctx.fillStyle = TENUE;
-            ctx.fillText(`(${v.s.join(', ')}) Z=${v.z}`, V[k][0] + 6, V[k][1] - 6);
+            ctx.fillText(mate(`(${v.s.join(', ')}) Z = ${v.z}`), V[k][0] + 6, V[k][1] - 6);
           }
         });
         ctx.globalAlpha = 1;
@@ -636,5 +646,5 @@
     }
   }
 
-  window.Dibujo = { Lienzo, COLORES, bonito, cuadro };
+  window.Dibujo = { Lienzo, COLORES, bonito, cuadro, mate };
 })();
