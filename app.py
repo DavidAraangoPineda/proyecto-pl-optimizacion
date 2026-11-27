@@ -99,6 +99,7 @@ with st.sidebar:
             st.error("\n\n".join(e.messages))
         except UnicodeDecodeError:
             st.error("No se pudo leer el archivo: no es texto UTF-8.")
+    st.caption("🌙 Modo oscuro: menú ⋮ (arriba a la derecha) → Settings → Theme.")
     st.caption("Equipo: David Arango Pineda · Juan Ignacio Parra")
 
 # ====================================================================== entrada del problema
@@ -197,6 +198,19 @@ def _ayuda(*textos):
             st.markdown(t)
 
 
+# Resaltados semitransparentes: se leen bien con el tema claro y con el oscuro.
+VERDE = "rgba(46, 160, 67, 0.28)"
+ROJO = "rgba(248, 81, 73, 0.28)"
+
+
+def _tema_oscuro():
+    """True si el usuario tiene activo el tema oscuro (menú ⋮ → Settings → Theme)."""
+    try:
+        return st.context.theme.type == "dark"
+    except AttributeError:      # versiones de Streamlit sin st.context.theme
+        return False
+
+
 def _df(header, rows, meta=None):
     # los encabezados repetidos romperían el DataFrame; se hacen únicos
     seen, cols = {}, []
@@ -212,13 +226,13 @@ def _df(header, rows, meta=None):
     def paint(data):
         out = pd.DataFrame("", index=data.index, columns=data.columns)
         if ec is not None:
-            out.iloc[:, ec] = "background-color: #d9f2d9"
+            out.iloc[:, ec] = f"background-color: {VERDE}"
         if lr is not None:
-            out.iloc[lr, :] = "background-color: #fde0dc"
+            out.iloc[lr, :] = f"background-color: {ROJO}"
         if er is not None:
-            out.iloc[er, :] = "background-color: #d9f2d9"
+            out.iloc[er, :] = f"background-color: {VERDE}"
         if ec is not None and lr is not None:
-            out.iloc[lr, ec] = "background-color: #ffd54f; font-weight: bold"
+            out.iloc[lr, ec] = "background-color: #ffd54f; color: #111; font-weight: bold"
         return out
 
     return sty.apply(paint, axis=None)
@@ -296,7 +310,7 @@ with tabs[1]:
 # ---- Método gráfico
 with tabs[2]:
     _ayuda(ayuda.GRAFICO)
-    info = graph_2d(problem, sol)
+    info = graph_2d(problem, sol, dark=_tema_oscuro())
     if not info.applicable:
         st.warning("⚠️ " + info.messages[0])
     else:

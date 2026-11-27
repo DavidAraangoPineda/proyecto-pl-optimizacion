@@ -3,6 +3,8 @@ import sys
 from fractions import Fraction
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from lp.geometry import feasible_vertices_2d, is_unbounded_region_2d  # noqa: E402
@@ -24,9 +26,10 @@ def test_region_vacia_y_no_acotada():
     assert is_unbounded_region_2d(EJ[4])              # ejemplo 5: no acotado
 
 
-def test_graph_2d_para_todos_los_ejemplos():
+@pytest.mark.parametrize("oscuro", [False, True])
+def test_graph_2d_para_todos_los_ejemplos(oscuro):
     for p in EJ:
-        info = graph_2d(p, solve(p))
+        info = graph_2d(p, solve(p), dark=oscuro)
         if p.n != 2:
             assert not info.applicable
         else:

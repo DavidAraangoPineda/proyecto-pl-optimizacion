@@ -12,7 +12,20 @@ from .geometry import feasible_vertices_2d, is_unbounded_region_2d  # noqa: E402
 from .model import SIGN_LABEL  # noqa: E402
 from .numbers import fmt, lin_expr  # noqa: E402
 
-COLORS = ["#1f77b4", "#d62728", "#2ca02c", "#9467bd", "#8c564b", "#e377c2", "#17becf", "#bcbd22"]
+# Paletas para fondo claro (interfaz en modo claro y PDF) y para fondo oscuro (modo oscuro de la interfaz).
+LIGHT = {
+    "bg": "white", "fg": "#222", "axis": "#444", "grid": "#b0b0b0",
+    "region": "#9ecae1", "region_line": "#3182bd", "vertex": "#111", "label_bg": "white", "label_edge": "#999",
+    "z": "#e6550d", "opt": "#f2b705", "empty": "#b30000", "unbounded": "#08519c",
+    "lines": ["#1f77b4", "#d62728", "#2ca02c", "#9467bd", "#8c564b", "#e377c2", "#17becf", "#bcbd22"],
+}
+DARK = {
+    "bg": "#0e1117", "fg": "#e6e6e6", "axis": "#9aa0a6", "grid": "#5f6368",
+    "region": "#4a90c2", "region_line": "#7fb8e6", "vertex": "#f0f0f0", "label_bg": "#262730", "label_edge": "#5f6368",
+    "z": "#ff8c42", "opt": "#ffd54f", "empty": "#ff6b6b", "unbounded": "#8ab4f8",
+    "lines": ["#5aa9e6", "#ff6b6b", "#6bd66b", "#c39bff", "#e0a37a", "#ff8ad8", "#4fd6e6", "#e6e65a"],
+}
+COLORS = LIGHT["lines"]
 
 
 @dataclass
@@ -59,8 +72,11 @@ def _pretty(v):
     return f"{float(v):.3f}".rstrip("0").rstrip(".")
 
 
-def graph_2d(problem, solution=None):
-    """Construye la gráfica. Si n ≠ 2 devuelve GraphInfo(applicable=False) con el aviso."""
+def graph_2d(problem, solution=None, dark=False):
+    """Construye la gráfica. Si n ≠ 2 devuelve GraphInfo(applicable=False) con el aviso.
+
+    dark=True dibuja con la paleta para fondo oscuro (modo oscuro de la interfaz).
+    """
     if problem.n != 2:
         return GraphInfo(False, messages=[
             f"El método gráfico no aplica: el problema tiene {problem.n} variables y solo se puede "
@@ -102,12 +118,18 @@ def graph_2d(problem, solution=None):
     lim = lim if lim > 0 else 10.0
     X = Y = lim
 
+    C = DARK if dark else LIGHT
     fig, ax = plt.subplots(figsize=(8.2, 6.4), dpi=110)
+    fig.patch.set_facecolor(C["bg"])
+    ax.set_facecolor(C["bg"])
+    for sp in ax.spines.values():
+        sp.set_color(C["axis"])
+    ax.tick_params(colors=C["fg"])
     ax.set_xlim(-0.06 * X, X)
     ax.set_ylim(-0.06 * Y, Y)
-    ax.axhline(0, color="#444", lw=1.2)
-    ax.axvline(0, color="#444", lw=1.2)
-    ax.grid(alpha=0.25)
+    ax.axhline(0, color=C["axis"], lw=1.2)
+    ax.axvline(0, color=C["axis"], lw=1.2)
+    ax.grid(alpha=0.25, color=C["grid"])
 
     # ----- región factible sombreada
     poly = [(0.0, 0.0), (X, 0.0), (X, Y), (0.0, Y)]
@@ -123,17 +145,17 @@ def graph_2d(problem, solution=None):
             break
     has_equal = any(s == "=" for s in problem.signs)
     if poly and _area(poly) > 1e-9 * X * Y and not has_equal and not info.empty:
-        ax.add_patch(Polygon(poly, closed=True, facecolor="#9ecae1", edgecolor="none", alpha=0.55, zorder=1,
+        ax.add_patch(Polygon(poly, closed=True, facecolor=C["region"], edgecolor="none", alpha=0.55, zorder=1,
                              label="Región factible"))
     elif info.vertices:
         pts = sorted(info.vertices, key=lambda v: (v[0], v[1]))
-        ax.plot([float(v[0]) for v in pts], [float(v[1]) for v in pts], color="#3182bd", lw=5, alpha=0.6,
+        ax.plot([float(v[0]) for v in pts], [float(v[1]) for v in pts], color=C["region_line"], lw=5, alpha=0.6,
                 solid_capstyle="round", zorder=1, label="Región factible (segmento/punto)")
 
     # ----- restricciones rotuladas
     xs = [-0.06 * X, X]
     for i, ((a1, a2), s, b) in enumerate(zip(pairs, problem.signs, problem.b)):
-        col = COLORS[i % len(COLORS)]
+        col = C["lines"][i % len(C["lines"])]
         lab = f"R{i + 1}: {lin_expr([a1, a2], ['x1', 'x2'])} {SIGN_LABEL[s]} {fmt(b)}"
         fa1, fa2, fb = float(a1), float(a2), float(b)
         if fa2 != 0:
@@ -146,13 +168,13 @@ def graph_2d(problem, solution=None):
     opt_set = {(v[0], v[1]) for v in info.optimal_vertices}
     for k, (x1, x2, z) in enumerate(info.vertices):
         is_opt = (x1, x2) in opt_set
-        ax.scatter([float(x1)], [float(x2)], s=95 if is_opt else 45, color="#f2b705" if is_opt else "#111",
-                   edgecolor="#111", marker="*" if is_opt else "o", zorder=5)
+        ax.scatter([float(x1)], [float(x2)], s=95 if is_opt else 45, color=C["opt"] if is_opt else C["vertex"],
+                   edgecolor=C["vertex"], marker="*" if is_opt else "o", zorder=5)
         dx = 0.02 * X if float(x1) < 0.75 * X else -0.02 * X
         ax.annotate(f"({_pretty(x1)}, {_pretty(x2)})\nZ = {_pretty(z)}", (float(x1), float(x2)),
                     xytext=(float(x1) + dx, float(x2) + 0.035 * Y), fontsize=8.5, zorder=6,
-                    ha="left" if dx > 0 else "right",
-                    bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#999", alpha=0.85))
+                    ha="left" if dx > 0 else "right", color=C["fg"],
+                    bbox=dict(boxstyle="round,pad=0.2", fc=C["label_bg"], ec=C["label_edge"], alpha=0.85))
 
     # ----- recta de la función objetivo (isoutilidad) en el óptimo
     if info.optimal_vertices and status != "unbounded" and (c1 != 0 or c2 != 0):
@@ -160,13 +182,13 @@ def graph_2d(problem, solution=None):
         fc1, fc2, foz = float(c1), float(c2), float(oz)
         if fc2 != 0:
             ys = [(foz - fc1 * x) / fc2 for x in xs]
-            ax.plot(xs, ys, "--", color="#e6550d", lw=2.2, zorder=4, label=f"Z = {_pretty(oz)} (óptimo)")
+            ax.plot(xs, ys, "--", color=C["z"], lw=2.2, zorder=4, label=f"Z = {_pretty(oz)} (óptimo)")
         else:
-            ax.plot([foz / fc1] * 2, [-0.06 * Y, Y], "--", color="#e6550d", lw=2.2, zorder=4,
+            ax.plot([foz / fc1] * 2, [-0.06 * Y, Y], "--", color=C["z"], lw=2.2, zorder=4,
                     label=f"Z = {_pretty(oz)} (óptimo)")
         if len(info.optimal_vertices) > 1:
             pa, pb = info.optimal_vertices[0], info.optimal_vertices[-1]
-            ax.plot([float(pa[0]), float(pb[0])], [float(pa[1]), float(pb[1])], color="#f2b705", lw=6, alpha=0.8,
+            ax.plot([float(pa[0]), float(pb[0])], [float(pa[1]), float(pb[1])], color=C["opt"], lw=6, alpha=0.8,
                     zorder=3, label="Segmento de óptimos múltiples")
         # dirección de mejora
         sgn = 1 if problem.sense == "max" else -1
@@ -174,20 +196,22 @@ def graph_2d(problem, solution=None):
         L = 0.12 * X
         ax.annotate("", xy=(float(ox1) + sgn * L * fc1 / norm, float(ox2) + sgn * L * fc2 / norm),
                     xytext=(float(ox1), float(ox2)),
-                    arrowprops=dict(arrowstyle="->", color="#e6550d", lw=2), zorder=6)
+                    arrowprops=dict(arrowstyle="->", color=C["z"], lw=2), zorder=6)
 
     if info.empty:
         ax.text(0.5, 0.5, "REGIÓN FACTIBLE VACÍA", transform=ax.transAxes, ha="center", va="center", fontsize=18,
-                color="#b30000", alpha=0.8, bbox=dict(boxstyle="round", fc="white", ec="#b30000"))
+                color=C["empty"], alpha=0.9, bbox=dict(boxstyle="round", fc=C["bg"], ec=C["empty"]))
     elif not info.bounded:
         ax.text(0.98, 0.02, "Región no acotada →", transform=ax.transAxes, ha="right", va="bottom", fontsize=10,
-                color="#08519c")
+                color=C["unbounded"])
 
-    ax.set_xlabel("x1")
-    ax.set_ylabel("x2")
+    ax.set_xlabel("x1", color=C["fg"])
+    ax.set_ylabel("x2", color=C["fg"])
     sense = "Max" if problem.sense == "max" else "Min"
-    ax.set_title(f"Método gráfico — {sense} Z = {lin_expr(problem.c, ['x1', 'x2'])}")
-    ax.legend(loc="upper right", fontsize=8, framealpha=0.9)
+    ax.set_title(f"Método gráfico — {sense} Z = {lin_expr(problem.c, ['x1', 'x2'])}", color=C["fg"])
+    leg = ax.legend(loc="upper right", fontsize=8, framealpha=0.9, facecolor=C["label_bg"], edgecolor=C["label_edge"])
+    for t in leg.get_texts():
+        t.set_color(C["fg"])
     fig.tight_layout()
     info.figure = fig
     return info
