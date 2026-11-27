@@ -4,6 +4,8 @@ Proyecto de Optimización — Universidad de Antioquia, Facultad de Ingeniería,
 
 **Integrantes:** David Arango Pineda · Juan Ignacio Parra
 
+**Aplicación en línea:** https://simplex-gran-m-udea.streamlit.app · **Manual:** [PDF](docs/Manual_Usuario.pdf) · [Markdown](docs/MANUAL_USUARIO.md)
+
 Aplicación web (Streamlit) que resuelve problemas de programación lineal con **método propio** —**Gran M** sobre tablero y **simplex revisado**— y muestra el proceso completo, no solo la respuesta. Toda la aritmética es **exacta con fracciones** (sin errores de redondeo).
 
 > Las librerías de optimización (scipy) se usan **únicamente en las pruebas** para verificar los resultados del método propio; nunca para producirlos.
@@ -16,16 +18,17 @@ Aplicación web (Streamlit) que resuelve problemas de programación lineal con *
 | Método propio (Gran M y simplex revisado) | `lp/bigm.py`, `lp/revised.py`, `lp/standard.py` |
 | Modo directo o paso a paso (forma estándar, entrante, razón mínima, saliente, pivote, tablero / B⁻¹, básicas y costos reducidos) | `lp/render.py`, pestaña «Paso a paso» |
 | Solución óptima: variables, Z, holgura/exceso por restricción | `lp/analysis.py`, pestaña «Resultado» |
-| Método gráfico (2 variables): región sombreada, restricciones rotuladas, vértices con Z, recta de Z; avisa si n > 2 | `lp/graphical.py` |
+| Método gráfico (2 variables): región sombreada, restricciones rotuladas, vértices con Z, recta de Z; región vacía (semiplanos de cada restricción) y no acotada (flecha hacia donde Z crece); avisa si n > 2 | `lp/geometry.py`, `lp/graphical.py` |
 | Sensibilidad: precios sombra, costos reducidos, rango de coeficientes y de lados derechos, con interpretación | `lp/analysis.py` |
 | Casos especiales: infactible, no acotado, óptimos múltiples, degenerado (mensajes claros) | `lp/analysis.py` |
 | Interfaz gráfica: agregar/quitar variables y restricciones, editar y re-resolver sin reiniciar | `app.py` |
 | **Bonos:** dos métodos comparados · fracciones exactas · exportar a PDF · cargar/guardar JSON | pestañas «Comparar métodos» y «Exportar», barra lateral |
-| **Bono:** presentación animada y narrada «El viaje del Simplex» (un solo HTML, sin internet) | `lp/presentation.py`, `presentacion/`, pestaña «Exportar» |
+| **Extra:** explicación animada y narrada «El viaje del Simplex» del problema resuelto, dentro de la app y descargable como HTML | `lp/presentation.py`, `presentacion/`, pestañas «Animación» y «Exportar» |
+| **Extra:** explicación de cada pestaña (desplegables ℹ️) y modo oscuro | `interfaz/ayuda.py`, `app.py` |
 
 ## Requisitos
 
-- Python 3.10 o superior
+- Python 3.11 o superior (probado con 3.14, la versión del despliegue)
 - Dependencias de `requirements.txt` (streamlit, matplotlib, pandas, reportlab)
 
 ## Instalación
@@ -57,7 +60,9 @@ pip install -r requirements-dev.txt
 pytest tests -q
 ```
 
-Las pruebas cubren los 7 problemas del enunciado con ambos métodos, 400 problemas aleatorios contra scipy (óptimo, infactible, no acotado), la sensibilidad (re-resolviendo con los parámetros perturbados) y la validación de la entrada.
+Las pruebas (47) cubren los 7 problemas del enunciado con ambos métodos, 400 problemas aleatorios contra scipy (óptimo, infactible, no acotado), la sensibilidad (re-resolviendo con los parámetros perturbados), la validación de la entrada, el método gráfico, la animación, la interfaz completa (resuelve cada ejemplo con ambos métodos) y las reglas de arquitectura.
+
+Para regenerar el PDF del manual: `python docs/generar_manual_pdf.py` (usa Microsoft Edge o Chrome).
 
 ## Estructura
 
@@ -80,7 +85,7 @@ lp/pdf_export.py        Exportación a PDF
 lp/presentation.py      Datos y HTML de la presentación animada
 presentacion/           Presentación (HTML/CSS/JS); `python -m lp.presentation` regenera js/datos.js
 tests/                  Pruebas (scipy solo para verificar)
-docs/                   Arquitectura, propuesta, planeación de sprints y manual
+docs/                   Manual, guía de sustentación, arquitectura y propuesta del Sprint 1
 examples/               Problemas de ejemplo en JSON
 ```
 
@@ -104,6 +109,8 @@ La separación por capas y sus reglas (verificadas por las pruebas) están en [d
 
 - [x] Repositorio con código fuente
 - [x] README con requisitos, instalación y ejecución
-- [ ] Manual de usuario (máx. 5 páginas, capturas de 2 problemas) — ver [docs/MANUAL_USUARIO.md](docs/MANUAL_USUARIO.md)
+- [x] Aplicación web en línea: https://simplex-gran-m-udea.streamlit.app
+- [x] Manual de usuario (4 páginas, capturas de 2 problemas resueltos) — [PDF](docs/Manual_Usuario.pdf) · [Markdown](docs/MANUAL_USUARIO.md)
+- [x] Guía de sustentación y guion del video — [docs/SUSTENTACION.md](docs/SUSTENTACION.md)
 - [ ] Video de demostración (máx. 5 min)
 - [ ] Historial de commits de ambos integrantes

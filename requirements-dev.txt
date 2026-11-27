@@ -3,3 +3,4 @@
 pytest>=8.0
 scipy>=1.11
 numpy>=1.26
+markdown>=3.5        # solo para generar el PDF del manual (docs/generar_manual_pdf.py)
